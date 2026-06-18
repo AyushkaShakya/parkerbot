@@ -1,0 +1,31 @@
+/* app/globals.css
+   ---------------------------------------------------------------------------
+   Loads Tailwind and defines a few global, app-wide styles. Component-level
+   styling is done with Tailwind utility classes directly in the JSX.
+   --------------------------------------------------------------------------- */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+/* A slim, theme-friendly scrollbar for the message list and sidebar. */
+.scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 140, 0.35);
+  border-radius: 9999px;
+}
+
+/* Respect users who prefer reduced motion — disable our animations for them. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
