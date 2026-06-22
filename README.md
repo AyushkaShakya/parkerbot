@@ -34,4 +34,7 @@ An AI-powered insurance chatbot built with Next.js, React, and Tailwind CSS, pow
 5. Run the app
    npm run dev
 
+## CI/CD
+This project uses Jenkins for automated builds.
+
 Open http://localhost:3000
