@@ -1,64 +1,56 @@
 // components/Composer.js
-// -----------------------------------------------------------------------------
-// The message input box: auto-growing textarea, Enter to send (Shift+Enter for
-// newline), and a darker sky→pink send button.
-// -----------------------------------------------------------------------------
 "use client";
+import { useState, useRef } from "react";
 
-import { useRef, useState, useEffect } from "react";
-import { Send } from "lucide-react";
+export default function Composer({ onSend, disabled, activeFile }) {
+  const [text, setText] = useState("");
+  const textareaRef = useRef(null);
 
-export default function Composer({ onSend, disabled }) {
-  const [value, setValue] = useState("");
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
-  }, [value]);
-
-  const submit = () => {
-    const text = value.trim();
-    if (!text || disabled) return;
-    onSend(text);
-    setValue("");
+  const handleSend = () => {
+    const trimmed = text.trim();
+    if (!trimmed || disabled) return;
+    onSend(trimmed);
+    setText("");
+    textareaRef.current?.focus();
   };
 
-  const onKeyDown = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      submit();
+      handleSend();
     }
   };
 
   return (
-    <div className="border-t border-slate-200 bg-white/70 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-      <div className="mx-auto flex max-w-3xl items-end gap-2">
-        <div className="flex flex-1 items-end rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200 transition focus-within:ring-2 focus-within:ring-sky-400 dark:bg-slate-800 dark:ring-white/10 dark:focus-within:ring-sky-500">
-          <textarea
-            ref={ref}
-            rows={1}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Message ParkerBot…"
-            className="max-h-40 flex-1 resize-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
-          />
-        </div>
+    <div className="bg-[var(--cream-card)] border-t border-[var(--tan-border)] px-4 py-4">
+      <div className="flex items-end gap-3 bg-[var(--cream-bg)] border border-[var(--tan-border)] rounded-2xl px-4 py-3">
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          placeholder={
+            activeFile
+              ? `Ask anything about ${activeFile}...`
+              : "Chat with Parker AI, or upload a PDF to ask about it..."
+          }
+          rows={1}
+          className="flex-1 bg-transparent text-sm text-[var(--text-dark)] placeholder-[var(--text-muted)] resize-none outline-none max-h-32 leading-relaxed disabled:opacity-50"
+          style={{ minHeight: "24px" }}
+        />
         <button
-          onClick={submit}
-          disabled={!value.trim() || disabled}
-          title="Send (Enter)"
-          aria-label="Send message"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-600 to-pink-500 text-white shadow-md shadow-sky-500/30 transition hover:from-sky-700 hover:to-pink-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={handleSend}
+          disabled={disabled || !text.trim()}
+          className="w-8 h-8 bg-[var(--coffee)] hover:bg-[var(--coffee-dark)] disabled:bg-[var(--tan-border)] rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
         >
-          <Send className="h-5 w-5" />
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
-      <p className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-slate-400 dark:text-slate-500">
-        ParkerBot can make mistakes. Enter to send · Shift+Enter for newline.
+      <p className="text-xs text-[var(--text-muted)] text-center mt-2">
+        Press Enter to send · Shift+Enter for new line
       </p>
     </div>
   );

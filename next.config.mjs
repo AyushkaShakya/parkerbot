@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
-// Minimal config. Next.js works out of the box; we keep this here so you have
-// an obvious place to add image domains, redirects, headers, etc. later.
-const nextConfig = {};
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  },
+  webpack: (config) => {
+    // pdfjs-dist references an optional 'canvas' module for image rendering,
+    // which we don't use (we only extract text). Tell webpack to ignore it
+    // so it doesn't try to bundle a package that isn't installed.
+    config.resolve.alias.canvas = false;
+    return config;
+  },
+};
 
 export default nextConfig;

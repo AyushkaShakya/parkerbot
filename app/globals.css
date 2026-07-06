@@ -1,31 +1,86 @@
-/* app/globals.css
-   ---------------------------------------------------------------------------
-   Loads Tailwind and defines a few global, app-wide styles. Component-level
-   styling is done with Tailwind utility classes directly in the JSX.
-   --------------------------------------------------------------------------- */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
+:root {
+  --cream-bg: #faf6ef;
+  --cream-sidebar: #f3ead9;
+  --cream-card: #fffdf8;
+  --tan-border: #e6d7bf;
+  --coffee: #6f4a32;
+  --coffee-dark: #5a3a28;
+  --coffee-light: #efe0c8;
+  --text-dark: #3d2b1e;
+  --text-muted: #8a7862;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--cream-bg);
+  color: var(--text-dark);
 }
 
-/* A slim, theme-friendly scrollbar for the message list and sidebar. */
-.scroll-area::-webkit-scrollbar {
-  width: 8px;
-}
-.scroll-area::-webkit-scrollbar-thumb {
-  background: rgba(120, 120, 140, 0.35);
-  border-radius: 9999px;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* Respect users who prefer reduced motion — disable our animations for them. */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
+::-webkit-scrollbar-track {
+  background: var(--cream-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tan-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--coffee-light);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Message animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-animate {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Typing indicator */
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.typing-dot {
+  animation: bounce 1.2s infinite;
+  background-color: var(--coffee);
+  opacity: 0.5;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
 }

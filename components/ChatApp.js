@@ -1,65 +1,93 @@
 // components/ChatApp.js
-// -----------------------------------------------------------------------------
-// The top-level component. It connects the hooks (state/logic) to the UI
-// components (Sidebar + ChatWindow) and manages the mobile sidebar drawer.
-// -----------------------------------------------------------------------------
 "use client";
-
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
-import { useChats } from "@/hooks/useChats";
-import { useTheme } from "@/hooks/useTheme";
 
 export default function ChatApp() {
-  // All chat data + actions come from the useChats hook.
-  const {
-    chats, activeChat, activeId, isTyping,
-    newChat, resetChat, selectChat, clearChat, sendMessage,
-  } = useChats();
+  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeFile, setActiveFile] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
-  // Dark/light mode from the useTheme hook.
-  const { dark, toggle } = useTheme();
-
-  // Whether the mobile sidebar drawer is open.
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Selecting/creating a chat on mobile should also close the drawer.
-  const handleSelect = (id) => {
-    selectChat(id);
-    setSidebarOpen(false);
-  };
-  const handleNew = () => {
-    newChat();
-    setSidebarOpen(false);
+  const handleFileUpload = (fileName) => {
+    if (!uploadedFiles.includes(fileName)) {
+      setUploadedFiles(prev => [...prev, fileName]);
+    }
+    setActiveFile(fileName);
+    setMessages([{
+      role: "assistant",
+      content: `I have processed **${fileName}**. Ask me anything about it!`,
+    }]);
   };
 
-  // When the active user changes, wipe everything and start a fresh chat.
-  const handleUserSwitch = () => {
-    resetChat();
-    setSidebarOpen(false);
+  const handleSelectFile = (fileName) => {
+    setActiveFile(fileName);
+    setMessages([{
+      role: "assistant",
+      content: `Switched to **${fileName}**. What would you like to know?`,
+    }]);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setActiveFile(null);
+  };
+
+  const handleDeleteFile = (fileName) => {
+    setUploadedFiles(prev => prev.filter(f => f !== fileName));
+    if (activeFile === fileName) {
+      setActiveFile(null);
+      setMessages([]);
+    }
+  };
+
+  const sendMessage = async (content) => {
+    const userMessage = { role: "user", content };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setIsTyping(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages,
+          fileName: activeFile,
+        }),
+      });
+
+      const data = await res.json();
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: data.reply || data.error || "Something went wrong.",
+      }]);
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Sorry, something went wrong. Please try again.",
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-screen w-full overflow-hidden bg-[var(--cream-bg)]">
       <Sidebar
-        chats={chats}
-        activeId={activeId}
-        onNewChat={handleNew}
-        onSelect={handleSelect}
-        onUserSwitch={handleUserSwitch}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        uploadedFiles={uploadedFiles}
+        activeFile={activeFile}
+        onFileUpload={handleFileUpload}
+        onSelectFile={handleSelectFile}
+        onDeleteFile={handleDeleteFile}
+        onNewChat={handleNewChat}
       />
-
       <ChatWindow
-        chat={activeChat}
+        messages={messages}
         isTyping={isTyping}
         onSend={sendMessage}
-        onClear={clearChat}
-        dark={dark}
-        onToggleTheme={toggle}
-        onOpenSidebar={() => setSidebarOpen(true)}
+        activeFile={activeFile}
       />
     </div>
   );

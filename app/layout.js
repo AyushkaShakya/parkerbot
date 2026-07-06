@@ -13,8 +13,8 @@ const sora = Sora({ subsets: ["latin"], weight: ["600", "700"], variable: "--fon
 
 // Metadata shows up in the browser tab and in link previews.
 export const metadata = {
-  title: "ParkerBot — AI Chat",
-  description: "A modern, ChatGPT-style AI chatbot for casual conversations.",
+  title: "Parker AI — Chat with your PDFs",
+  description: "Upload a PDF and ask questions about it, powered by Groq + LLaMA.",
 };
 
 export default function RootLayout({ children }) {

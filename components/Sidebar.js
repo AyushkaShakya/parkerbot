@@ -1,97 +1,172 @@
 // components/Sidebar.js
-// -----------------------------------------------------------------------------
-// The left sidebar: brand, New chat button, and the USER SWITCHER.
-// (Chat history list removed — the app shows one live conversation at a time,
-//  and switching users starts a fresh chat.)
-// -----------------------------------------------------------------------------
 "use client";
+import { useRef, useState } from "react";
 
-import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
-import { USERS, getUserId, setUserId } from "@/lib/user";
+export default function Sidebar({
+  uploadedFiles,
+  activeFile,
+  onFileUpload,
+  onSelectFile,
+  onDeleteFile,
+  onNewChat,
+}) {
+  const fileInputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
-export default function Sidebar({ onNewChat, onUserSwitch, open, onClose }) {
-  // Track which user is active. We read the saved value AFTER mount to avoid
-  // a server/client mismatch (localStorage only exists in the browser).
-  const [userId, setUid] = useState(USERS[0].id);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  useEffect(() => {
-    setUid(getUserId());
-  }, []);
+    setUploading(true);
+    setError(null);
 
-  // When the dropdown changes: save the choice, update local state, and tell
-  // the parent to start a fresh chat for the new user.
-  const handleUserChange = (e) => {
-    const id = e.target.value;
-    setUserId(id);   // saves to localStorage; next message will use this user
-    setUid(id);      // updates the UI immediately
-    onUserSwitch?.(); // wipe history + jump to a new empty chat
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        onFileUpload(data.fileName);
+      }
+    } catch (err) {
+      setError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
-  // Find the active user's display name + first initial for the avatar.
-  const activeUser = USERS.find((u) => u.id === userId) || USERS[0];
-  const initial = activeUser.name.charAt(0).toUpperCase();
-
   return (
-    <>
-      {open && (
-        <div className="fixed inset-0 z-20 bg-black/50 md:hidden" onClick={onClose} aria-hidden />
-      )}
+    <div className="w-72 h-screen bg-[var(--cream-sidebar)] border-r border-[var(--tan-border)] flex flex-col">
 
-      <aside
-        className={`fixed z-30 flex h-full w-72 flex-col border-r border-slate-200 bg-white transition-transform
-        dark:border-white/10 dark:bg-slate-900 md:static md:translate-x-0
-        ${open ? "translate-x-0" : "-translate-x-full"}`}
-      >
-        {/* Brand */}
-        <div className="flex items-center gap-2 px-4 py-4">
-          <div className="h-9 w-9 overflow-hidden rounded-xl shadow-lg shadow-sky-400/30">
-            <img src="/logo.png" alt="ParkerBot logo" className="h-full w-full object-cover" />
+      {/* Logo */}
+      <div className="p-5 border-b border-[var(--tan-border)]">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[var(--coffee)] rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold leading-none pt-[1px] block">P</span>
           </div>
-          <span className="font-display text-lg font-bold text-slate-900 dark:text-white">ParkerBot</span>
-          <button className="ml-auto text-slate-500 md:hidden" onClick={onClose} aria-label="Close menu">
-            <X className="h-5 w-5" />
-          </button>
+          <div>
+            <h1 className="text-base font-semibold text-[var(--text-dark)]">Parker AI</h1>
+            <p className="text-xs text-[var(--text-muted)]">Chat with your PDFs</p>
+          </div>
         </div>
+      </div>
 
-        {/* New chat — darker sky/pink so it reads as a clickable button */}
-        <div className="px-3">
-          <button
-            onClick={onNewChat}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-pink-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:from-sky-700 hover:to-pink-600 active:scale-[.98]"
-          >
-            <Plus className="h-4 w-4" /> New chat
-          </button>
-        </div>
+      {/* Upload Button */}
+      <div className="p-4">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="w-full flex items-center justify-center gap-2 bg-[var(--coffee)] hover:bg-[var(--coffee-dark)] disabled:opacity-50 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors"
+        >
+          {uploading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Upload PDF
+            </>
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        {error && (
+          <p className="text-xs text-red-600 mt-2 text-center">{error}</p>
+        )}
+      </div>
 
-        {/* Spacer pushes the user switcher to the bottom (history list removed) */}
-        <div className="flex-1" />
+      {/* New Chat Button */}
+      <div className="px-4 pb-3">
+        <button
+          onClick={onNewChat}
+          className="w-full flex items-center justify-center gap-2 border border-[var(--tan-border)] hover:bg-[var(--cream-card)] text-[var(--text-dark)] text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          New Chat
+        </button>
+      </div>
 
-        {/* USER SWITCHER */}
-        <div className="m-3 rounded-xl bg-slate-100 p-3 dark:bg-white/5">
-          <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-500 to-pink-400 font-bold text-white">
-              {initial}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Active user
-              </p>
-              <select
-                value={userId}
-                onChange={handleUserChange}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-sky-500 dark:border-white/10 dark:bg-slate-800 dark:text-white"
+      {/* Documents List */}
+      <div className="flex-1 overflow-y-auto px-3">
+        {uploadedFiles.length > 0 && (
+          <>
+            <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider px-2 mb-2">
+              Your Documents
+            </p>
+            {uploadedFiles.map((fileName) => (
+              <div
+                key={fileName}
+                onClick={() => onSelectFile(fileName)}
+                className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer mb-1 transition-colors ${
+                  activeFile === fileName
+                    ? "bg-[var(--coffee-light)] border border-[var(--coffee)]/30"
+                    : "hover:bg-[var(--cream-card)]"
+                }`}
               >
-                {USERS.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
+                <div className="w-7 h-7 bg-[#f6e3d3] rounded flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#8a4a2e] text-xs font-bold">PDF</span>
+                </div>
+                <span className={`text-sm flex-1 truncate ${
+                  activeFile === fileName ? "text-[var(--coffee-dark)] font-medium" : "text-[var(--text-dark)]"
+                }`}>
+                  {fileName}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteFile(fileName);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-red-600 transition-all"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </>
+        )}
+
+        {uploadedFiles.length === 0 && (
+          <div className="text-center py-8 px-4">
+            <div className="w-12 h-12 bg-[var(--cream-card)] border border-[var(--tan-border)] rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
+            <p className="text-sm text-[var(--text-muted)]">No documents yet</p>
+            <p className="text-xs text-[var(--text-muted)] opacity-70 mt-1">Upload a PDF to get started</p>
           </div>
-        </div>
-      </aside>
-    </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-[var(--tan-border)]">
+        <p className="text-xs text-[var(--text-muted)] text-center">
+          Powered by Groq + LLaMA
+        </p>
+      </div>
+    </div>
   );
 }
