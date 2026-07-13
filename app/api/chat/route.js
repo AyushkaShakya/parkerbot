@@ -40,6 +40,12 @@ export async function POST(request) {
 
     return NextResponse.json({ reply });
   } catch (error) {
+    // Log the FULL error (message + stack trace) so we can see exactly what
+    // broke and where, instead of just seeing "500" in the terminal.
+    console.error("=== /api/chat ERROR ===");
+    console.error(error);
+    console.error("=== END ERROR ===");
+
     return NextResponse.json(
       { error: error.message || "Server error" },
       { status: 500 }
