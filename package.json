@@ -2,7 +2,7 @@
   "name": "parker-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "A modern, ChatGPT-style AI chatbot built with Next.js, React, and Tailwind CSS.",
+  "description": "A RAG-powered PDF study assistant built with Next.js, React, Tailwind CSS, and the Groq API.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

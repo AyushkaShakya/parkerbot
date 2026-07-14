@@ -1,5 +1,5 @@
 // app/api/chat/route.js
-// Chat API for StudyMate AI.
+// Chat API for Parker AI.
 // Two modes:
 //  - No PDF uploaded  -> generalChat()   (natural chit-chat)
 //  - PDF active       -> answerQuestion() (chit-chat + grounded document Q&A)
