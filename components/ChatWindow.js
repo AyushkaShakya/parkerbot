@@ -1,6 +1,8 @@
 // components/ChatWindow.js
 "use client";
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Composer from "./Composer";
 
 function Message({ message }) {
@@ -20,7 +22,15 @@ function Message({ message }) {
             : "bg-[var(--cream-card)] border border-[var(--tan-border)] text-[var(--text-dark)] rounded-tl-sm shadow-sm"
         }`}
       >
-        {message.content}
+        {isUser ? (
+          message.content
+        ) : (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.content}
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
       {isUser && (
         <div className="w-8 h-8 bg-[var(--coffee-light)] rounded-full flex items-center justify-center flex-shrink-0 mt-1">

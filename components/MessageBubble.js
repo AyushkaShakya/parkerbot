@@ -1,12 +1,16 @@
 // components/MessageBubble.js
 // -----------------------------------------------------------------------------
 // One message: avatar, rounded bubble, timestamp, copy-on-hover button.
-// User bubbles = sky→pink gradient on the right; AI bubbles = neutral on the left.
+// User bubbles = coffee brown on the right; AI bubbles = cream card on the left.
+// AI messages are rendered as Markdown (bold, tables, lists) so the model's
+// formatted answers display properly instead of showing raw ** and | symbols.
 // -----------------------------------------------------------------------------
 "use client";
 
 import { useState } from "react";
-import { User, Bot, Copy, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { formatTime } from "@/lib/utils";
 
 export default function MessageBubble({ message }) {
@@ -22,31 +26,46 @@ export default function MessageBubble({ message }) {
   };
 
   return (
-    <div className={`flex animate-bubble gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
-      {/* Avatar — user gets pink→sky, ParkerBot gets sky→pink */}
+    <div className={`flex message-animate gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
+      {/* Avatar — P for Parker AI, U for user */}
       <div
-        className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${
-          isUser
-            ? "bg-gradient-to-br from-pink-400 to-sky-400"
-            : "bg-gradient-to-br from-sky-500 to-pink-400"
-        }`}
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white"
+        style={{ backgroundColor: "var(--coffee)" }}
       >
-        {isUser ? <User className="h-4 w-4 text-white" /> : <Bot className="h-4 w-4 text-white" />}
+        {isUser ? "U" : "P"}
       </div>
 
       {/* Bubble + meta row */}
       <div className={`group flex max-w-[80%] flex-col ${isUser ? "items-end" : "items-start"}`}>
         <div
-          className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
-            isUser
-              ? "rounded-br-md bg-gradient-to-br from-sky-500 to-pink-400 text-white"
-              : "rounded-bl-md bg-white text-slate-800 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
+          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
+            isUser ? "rounded-br-md text-white" : "rounded-bl-md"
           }`}
+          style={
+            isUser
+              ? { backgroundColor: "var(--coffee)" }
+              : {
+                  backgroundColor: "var(--cream-card)",
+                  color: "var(--text-dark)",
+                  border: "1px solid var(--tan-border)",
+                }
+          }
         >
-          {message.text}
+          {isUser ? (
+            <span className="whitespace-pre-wrap">{message.text}</span>
+          ) : (
+            <div className="markdown-body">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.text}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
 
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+        <div
+          className="mt-1 flex items-center gap-2 text-[11px]"
+          style={{ color: "var(--text-muted)" }}
+        >
           <span>{formatTime(message.time)}</span>
           <button
             onClick={copy}
@@ -54,7 +73,11 @@ export default function MessageBubble({ message }) {
             title="Copy message"
             aria-label="Copy message"
           >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? (
+              <Check className="h-3.5 w-3.5" style={{ color: "#5a9a5a" }} />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
           </button>
         </div>
       </div>
