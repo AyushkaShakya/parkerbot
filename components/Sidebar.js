@@ -164,7 +164,7 @@ export default function Sidebar({
       {/* Footer */}
       <div className="p-4 border-t border-[var(--tan-border)]">
         <p className="text-xs text-[var(--text-muted)] text-center">
-          Powered by Groq + LLaMA
+          Powered by Groq + Gemini
         </p>
       </div>
     </div>
